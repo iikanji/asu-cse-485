@@ -1,0 +1,4 @@
+pyaudio
+tensorflow
+tflearn
+wavio

@@ -1,0 +1,2 @@
+model_checkpoint_path: "/Users/chris/Documents/asu-cse-485/nlp/tflearn.lstm.model"
+all_model_checkpoint_paths: "/Users/chris/Documents/asu-cse-485/nlp/tflearn.lstm.model"
