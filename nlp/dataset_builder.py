@@ -60,8 +60,7 @@ class DatasetBuilder(object):
 		
 		self.num_models = len(all_labels)
 
-		all_labels = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
-		self.CORPUS_DIR = "{}/data_speech".format(os.path.dirname(os.path.realpath(__file__)))
+		#self.CORPUS_DIR = "{}/data_speech".format(os.path.dirname(os.path.realpath(__file__)))
 
 		#for category in categories:
 		#labels = [x for x in os.listdir(os.path.join(self.CORPUS_DIR, category)) if os.path.isdir(os.path.join(os.path.join(self.CORPUS_DIR, category), x))]
