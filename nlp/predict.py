@@ -43,7 +43,8 @@ end = time.time()
 print "2 predictions took {} seconds".format(end - start)
 """
 
-path_to_file = "{}/data_speech/{}".format(os.path.dirname(os.path.realpath(__file__)), "eight/00b01445_nohash_0.wav")
+filename = "yellow_1.wav"
+path_to_file = "{}/{}".format(os.path.dirname(os.path.realpath(__file__)), filename)
 
 from classifier import Classifier
 

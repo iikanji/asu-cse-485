@@ -6,6 +6,7 @@ import wavio
 import wave
 from random import shuffle
 import helpers
+import librosa
 
 class Classifier(object):
 	"""docstring for Classifier"""
@@ -17,6 +18,7 @@ class Classifier(object):
 		for category in categories:
 			lbls = [x for x in os.listdir(os.path.join(data_dir, category)) if os.path.isdir(os.path.join(os.path.join(data_dir, category), x))]
 			self.labels.extend(lbls)
+		self.labels = ["Pink", "Yellow", "Green"]
 		self.model = None
 		self.learning_rate = learning_rate
 		
@@ -25,29 +27,27 @@ class Classifier(object):
 		self.difficulty_level = level
 
 	def train(self, training_iterations=100, replication=False):
-		if not os.path.isfile("speech_commands.lstm.preprocess"):
+		#if not os.path.isfile("speech_commands.lstm.preprocess"):
 			# Build preprocess model
 
-			builder = DatasetBuilder()
-			speech_command_dataset = builder.build_speech_command_dataset()
-			trainX, trainY = speech_command_dataset.get_training_set()
-			testX, testY = speech_command_dataset.get_testing_set()
-			print len(trainX)
-			print len(testX)
+		builder = DatasetBuilder()
+		speech_command_dataset = builder.build_speech_command_dataset()
+		trainX, trainY = speech_command_dataset.get_training_set()
+		testX, testY = speech_command_dataset.get_testing_set()
 
-			net = tflearn.input_data([None, 1, 8192])
-			net = tflearn.lstm(net, 128, dropout=0.8)
-			net = tflearn.fully_connected(net, speech_command_dataset.num_models, activation='softmax')
-			net = tflearn.regression(net, optimizer='adam', learning_rate=self.learning_rate, loss='categorical_crossentropy')
-		
-			model = tflearn.DNN(net, tensorboard_verbose=0)
-			remaining = training_iterations
-			while remaining > 0:
-				print "{} iterations remaining".format(training_iterations)
-				model.fit(trainX, trainY, n_epoch=10, validation_set=(testX, testY), show_metric=True, batch_size=len(trainX), validation_batch_size=len(testX))
-				training_iterations -= 1
+		net = tflearn.input_data([None, 20, 80])
+		net = tflearn.lstm(net, 128, dropout=0.8)
+		net = tflearn.fully_connected(net, len(self.labels), activation='softmax')
+		net = tflearn.regression(net, optimizer='adam', learning_rate=self.learning_rate, loss='categorical_crossentropy')
+	
+		self.model = tflearn.DNN(net, tensorboard_verbose=0)
+		remaining = training_iterations
+		while remaining > 0:
+			print "{} iterations remaining".format(remaining)
+			self.model.fit(trainX, trainY, n_epoch=10, validation_set=.1, show_metric=True)
+			remaining -= 1
 
-			self.model.save('speech_commands.lstm.preprocess')
+		self.model.save('speech_commands.lstm.preprocess')
 
 		"""
 		dataset = builder.build_dataset()
@@ -76,17 +76,21 @@ class Classifier(object):
 		"""
 
 		if not self.model:
-			net = tflearn.input_data([None, 1, 8192])
+			net = tflearn.input_data([None, 20, 80])
 			net = tflearn.lstm(net, 128, dropout=0.8)
-			net = tflearn.fully_connected(net, len(self.labels), activation='softmax')
+			net = tflearn.fully_connected(net, 3, activation='softmax')
 			net = tflearn.regression(net, optimizer='adam', learning_rate=self.learning_rate, loss='categorical_crossentropy')
 			self.model = tflearn.DNN(net, tensorboard_verbose=0)
 		
-		self.model.load('tflearn.lstm.model.large')
-		chunk = helpers.load_wav_file(filename, 4096)
-		test = np.reshape([chunk], [-1, 1, 8192])
+		self.model.load('speech_commands.lstm.preprocess')
+		wave, sr = librosa.load(filename, mono=True)
+		mfcc = librosa.feature.mfcc(wave, sr)
+		mfcc = np.pad(mfcc,((0,0),(0,80-len(mfcc[0]))), mode='constant', constant_values=0)
+		# chunk = helpers.load_wav_file(filename, 4096)
+		test = np.reshape([mfcc], [-1, 20, 80])
 		predicts = self.model.predict(test)[0]
 		accuracy = predicts[np.argmax(predicts)]
+		print predicts
 		label = self.labels[np.argmax(predicts)]
 		print "I am {}% sure the word passed is {}".format(accuracy*100, label)
 
@@ -112,7 +116,7 @@ class Classifier(object):
 class Dataset(object):
 
 	def __init__(self, chunk_size = 4096, has_testset=False):
-		self.categories = []
+		self.num_features = []
 		self.labels = []
 		self.wavs = []
 		self.batch_size = 0
@@ -139,24 +143,24 @@ class Dataset(object):
 
 	def get_training_set(self):
 		if self.proportion != 0:
-			self.train_x = np.reshape(self.x[:self.cutoff], [-1, 1, self.max_height])
+			self.train_x = np.reshape(self.x[:self.cutoff], [-1, 20, 80])
 			self.train_y = self.y[:self.cutoff]
 		else:
-			self.train_x = np.reshape(self.x, [-1, 1, self.max_height])
+			self.train_x = np.reshape(self.x, [-1, 20, 80])
 			self.train_y = self.y
-		return self.train_x, self.test_y
+		return np.array(self.train_x), np.array(self.train_y)
 
 	def get_testing_set(self):
 		if self.proportion != 0:
-			self.test_x = np.reshape(self.x[self.cutoff:], [-1, 1, self.max_height])
+			self.test_x = np.reshape(self.x[self.cutoff:], [-1, 20, 80])
 			self.test_y = self.y[self.cutoff:]
 		elif len(self.test_x) == 0 or len(self.test_y) == 0:
 			raise Exception("Need to set test data before calling get_testing_set(). Use set_testing_data()")
 		
-		return self.test_x, self.test_y
+		return np.array(self.test_x), np.array(self.test_y)
 
 	def set_testing_data(self, x, y):
-		self.test_x = np.reshape(x, [-1, 1, self.max_height])
+		self.test_x = np.reshape(x, [-1, 20, 80])
 		self.test_y = y
 
 class DatasetBuilder(object):
@@ -164,61 +168,39 @@ class DatasetBuilder(object):
 	def __init__(self, data_dir="{}/Corpora".format(os.path.dirname(os.path.realpath(__file__)))):
 		self.CORPUS_DIR = data_dir
 
-	def create_labels(self, dataset):
-		categories = [x for x in os.listdir(self.CORPUS_DIR) if os.path.isdir(os.path.join(self.CORPUS_DIR, x))]
+	def create_labels(self, dataset, exclusive_labels=None):
+		categories = set([x for x in os.listdir(self.CORPUS_DIR) if os.path.isdir(os.path.join(self.CORPUS_DIR, x))])
 		labels = []
 		cats = []
-		if not os.path.isfile("categories.txt"):
-			with open("categories.txt", "w") as f:
-				for category in categories:
-					labels = [x for x in os.listdir(os.path.join(self.CORPUS_DIR, category)) if os.path.isdir(os.path.join(os.path.join(self.CORPUS_DIR, category), x))]
-					labels.extend(labels)
-					for label in labels:
-						cat_lbl = "{}/{}".format(category, label)
-						cats.append(cat_lbl)
-						f.write(cat_lbl+"\n")
-
-			f.close()
-		else:
-			categories = [x for x in open("categories.txt")]
-			for category in categories:
-				category.replace("\n","")
-				labels = [x for x in os.listdir(os.path.join(self.CORPUS_DIR, category)) if os.path.isdir(os.path.join(os.path.join(self.CORPUS_DIR, category), x))]
-				labels.extend(labels)
-				for label in labels:
-					cat_lbl = "{}/{}".format(category, label)
-					cats.append(cat_lbl)
-
-		dataset.categories = cats
+		for label in [x for x in os.listdir(self.CORPUS_DIR) if os.path.isdir(os.path.join(self.CORPUS_DIR, x))]:
+			if (exclusive_labels is not None and label in exclusive_labels) or exclusive_labels is None:
+				labels.append(label)
 		dataset.set_labels(labels)
 
-	def build_dataset(self, replication):
+	def build_dataset(self, labels=None):
 		dataset = Dataset()
-		self.create_labels(dataset)
+		corpora_zip = "./Corpora.zip"
+		corpora_dir = "./Corpora/"
+		if not os.path.isdir(corpora_dir):
+			helpers.unzip_data_zip(corpora_zip, corpora_dir)
+		self.create_labels(dataset, labels)
 
-		batch_waves = []
-		batch_labels = []
 		batch_items = []
-		batch_size = 0
-		for category in dataset.categories:
-			label_dir = os.path.join(self.CORPUS_DIR, category)
-			label = category.split("/")[1]
+		for label in dataset.labels:
+			label_dir = os.path.join(self.CORPUS_DIR, label)
 			filenames = [x for x in os.listdir(label_dir) if x.endswith(".wav")]
 
 			for file in filenames:
-				reps = 50 if replication else 1
-				chunk = helpers.load_wav_file(os.path.join(label_dir, file), dataset.CHUNK)
-				dataset.max_height = len(chunk)
-				for i in range(reps):
-					lbl = [1 if label == l else 0 for l in dataset.labels]
-					batch_waves.append(chunk)
-					batch_labels.append(lbl)
-					batch_items.append((chunk, lbl))
-					batch_size += 1
+				wave, sr = librosa.load(os.path.join(label_dir, file), mono=True)
+				# chunk = helpers.load_wav_file(os.path.join(label_dir, file), dataset.CHUNK)
+				mfcc = librosa.feature.mfcc(wave, sr)
+				mfcc = np.pad(mfcc,((0,0),(0,80-len(mfcc[0]))), mode='constant', constant_values=0)
+				dataset.num_features = len(mfcc)
+				lbl = [1 if label == l else 0 for l in dataset.labels]
+				batch_items.append((mfcc, lbl))
 
 		shuffle(batch_items)
 		dataset.setX_Y([x[0] for x in batch_items], [x[1] for x in batch_items])
-		dataset.batch_size = batch_size
 
 		return dataset
 
@@ -233,25 +215,24 @@ class DatasetBuilder(object):
 		filenames = []
 		for category in labels:
 			filenames.extend([os.path.join(os.path.join(speech_data_dir, category), x) for x in os.listdir(os.path.join(speech_data_dir, category)) if x.endswith(".wav")])
-		# filenames = [x for x in open(os.path.join(speech_data_dir, "validation_list.txt"))]
 		batch_items = []
-		batch_size = 0
 		test_items = []
 		for file in filenames:
 			label = file.split("/")[-2]
-			chunk = helpers.load_wav_file(file, dataset.CHUNK)
-			dataset.max_height = len(chunk)
+			wave, sr = librosa.load(file, mono=True)
+			# chunk = helpers.load_wav_file(os.path.join(label_dir, file), dataset.CHUNK)
+			mfcc = librosa.feature.mfcc(wave, sr)
+			mfcc = np.pad(mfcc,((0,0),(0,80-len(mfcc[0]))), mode='constant', constant_values=0)
+			dataset.num_features = len(mfcc)
 			lbl = [1 if label == l else 0 for l in dataset.labels]
 			which_set = helpers.which_set(file, 10, 10)
 			if which_set == 'validation':
 				test_items.append((chunk, lbl))
 			elif which_set == 'training':
 				batch_items.append((chunk, lbl))
-				batch_size += 1
 
 		shuffle(batch_items)
 		dataset.setX_Y([x[0] for x in batch_items], [x[1] for x in batch_items])
-		dataset.batch_size = batch_size
 
 		shuffle(test_items)
 		dataset.set_testing_data([x[0] for x in test_items], [x[1] for x in test_items])

@@ -6,10 +6,10 @@ import numpy as np
 import re
 import hashlib
 import tarfile
+import zipfile
 
 def load_wav_file(name, chunk_size):
 	f = wave.open(name, "rb")
-	# print("loading %s"%name)
 	chunk = []
 	data0 = f.readframes(chunk_size)
 	while data0:  # f.getnframes()
@@ -17,13 +17,10 @@ def load_wav_file(name, chunk_size):
 		# data = numpy.fromstring(data0, dtype='uint16')
 		data = np.fromstring(data0, dtype='uint8')
 		data = (data + 128) / 255.  # 0-1 for Better convergence
-		# chunks.append(data)
 		chunk.extend(data)
 		data0 = f.readframes(chunk_size)
-	# finally trim:
 	chunk = chunk[0:chunk_size * 2]  # should be enough for now -> cut
 	chunk.extend(np.zeros(chunk_size * 2 - len(chunk)))  # fill with padding 0's
-	# print("%s loaded"%name)
 	return chunk
 
 def which_set(filename, validation_percentage, testing_percentage):
@@ -78,5 +75,10 @@ def which_set(filename, validation_percentage, testing_percentage):
 
 def unzip_data_tar_gz(path, dest):
 	file = tarfile.open(path, 'r:gz')
+	file.extractall(path=dest)
+	file.close()
+
+def unzip_data_zip(path, dest):
+	file = zipfile.open(path, 'r')
 	file.extractall(path=dest)
 	file.close()

@@ -127,7 +127,7 @@ def listen_for_speech(threshold=THRESHOLD, num_phrases=-1):
         out_stream.write(data)
         data = wf.readframes(CHUNK)
 
-    os.remove(filename)
+    # os.remove(filename)
     out_stream.close()
     stream.close()
     p.terminate()
@@ -191,6 +191,6 @@ def stt_google_wav(audio_fname):
 
 
 if(__name__ == '__main__'):
-    listen_for_speech()  # listen to mic.
+    listen_for_speech(num_phrases=1)  # listen to mic.
     #print stt_google_wav('hello.flac')  # translate audio file
     #audio_int()  # To measure your mic levels

@@ -2,3 +2,4 @@ pyaudio
 tensorflow
 tflearn
 wavio
+librosa
