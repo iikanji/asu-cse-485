@@ -34,17 +34,16 @@ class Classifier(object):
 		speech_command_dataset = builder.build_speech_command_dataset()
 		trainX, trainY = speech_command_dataset.get_training_set()
 		testX, testY = speech_command_dataset.get_testing_set()
-
 		net = tflearn.input_data([None, 20, 80])
 		net = tflearn.lstm(net, 128, dropout=0.8)
-		net = tflearn.fully_connected(net, len(self.labels), activation='softmax')
+		net = tflearn.fully_connected(net, len(speech_command_dataset.labels), activation='softmax')
 		net = tflearn.regression(net, optimizer='adam', learning_rate=self.learning_rate, loss='categorical_crossentropy')
 	
 		self.model = tflearn.DNN(net, tensorboard_verbose=0)
 		remaining = training_iterations
 		while remaining > 0:
 			print "{} iterations remaining".format(remaining)
-			self.model.fit(trainX, trainY, n_epoch=10, validation_set=.1, show_metric=True)
+			self.model.fit(trainX, trainY, n_epoch=10, validation_set=(testX, testY), show_metric=True)
 			remaining -= 1
 
 		self.model.save('speech_commands.lstm.preprocess')
@@ -227,9 +226,9 @@ class DatasetBuilder(object):
 			lbl = [1 if label == l else 0 for l in dataset.labels]
 			which_set = helpers.which_set(file, 10, 10)
 			if which_set == 'validation':
-				test_items.append((chunk, lbl))
+				test_items.append((mfcc, lbl))
 			elif which_set == 'training':
-				batch_items.append((chunk, lbl))
+				batch_items.append((mfcc, lbl))
 
 		shuffle(batch_items)
 		dataset.setX_Y([x[0] for x in batch_items], [x[1] for x in batch_items])

@@ -1,4 +1,3 @@
-pyaudio
 tensorflow
 tflearn
 wavio
