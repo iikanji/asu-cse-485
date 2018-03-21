@@ -75,8 +75,6 @@ def listen_for_speech(threshold=THRESHOLD, num_phrases=-1):
                     input=True,
                     frames_per_buffer=CHUNK)
 
-
-
     print "* Listening mic. "
     audio2send = []
     cur_data = ''  # current chunk  of audio data
