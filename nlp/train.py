@@ -92,5 +92,6 @@ while training_iterations > 0:
 	training_iterations -= 1
 """
 
-c = Classifier()
-c.train(training_iterations=1)
+c = Classifier(learning_rate=0.0001, load_model=False)
+c.train(training_iterations=5)
+#c.test_model()

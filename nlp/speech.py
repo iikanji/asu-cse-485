@@ -118,7 +118,7 @@ class Speech(object):
 			else:
 				r.extend(snd_data)
 
-			if snd_started and num_silent > 50:
+			if snd_started and num_silent > 30:
 				print "Done Recording"
 				break
 
@@ -141,4 +141,4 @@ class Speech(object):
 
 if __name__ == "__main__":
 	s = Speech(0)
-	print s.record_and_validate("dog")
+	s.record()
