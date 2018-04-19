@@ -1,20 +1,20 @@
 from Tkinter import *
+from Flashcards import Flashcards
+from Playing import Game
 
-root = Tk() #blank window for widgets to be placed on
+class learnOrPlay(Frame):
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
 
-#Widgets
-learnOrPlay = Label(root, text="Are you going to learn or play?")
+        learnOrPlay = Label(self, text="Are you going to learn or play?")
 
-flashButton = Button(root, text="Review Flashcards")
-gameButton = Button(root, text="Play Game")
+        flashButton = Button(self, text="Review Flashcards", command=lambda:controller.show_frame(Flashcards))
+        gameButton = Button(self, text="Play Game", command=lambda:controller.show_frame(Game))
 
-returnButton = Button(root, text="Back to Categories")
+        returnButton = Button(self, text="Back to Categories")
 
-#Organization
-learnOrPlay.pack(fill=X)
-flashButton.pack(side="left")
-gameButton.pack(side="left")
+        learnOrPlay.pack(fill=X)
+        flashButton.pack(side="left")
+        gameButton.pack(side="left")
 
-returnButton.pack()
-
-root.mainloop() #makes sure window is constantly displayed
+        returnButton.pack()
