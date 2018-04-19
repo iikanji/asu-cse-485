@@ -7,6 +7,7 @@ from Flashcards import Flashcards
 
 
 class App(Tk):
+
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
 
@@ -37,6 +38,7 @@ class MainMenu:
     def __init__(self, master):
         menubar = Menu(master)
         filemenu = Menu(menubar, tearoff=0)
+        #filemenu.add_command(label="Categories", command=lambda:Categories.lift)
         filemenu.add_command(label="Quit", command=master.quit)
         menubar.add_cascade(label="Menu", menu=filemenu)
         master.config(menu=menubar)
