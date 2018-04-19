@@ -88,6 +88,7 @@ correctList = []
 
 enemyArray = [enemy1, enemy2, enemy3]
 currEnemy = random.choice(enemyArray)
+gunmaAnim = GunmaSprite()
 
 groundX = 0 
 groundY = 300
@@ -124,10 +125,12 @@ pauseRect = pauseText.get_rect()
 pauseRect.centerx = gameScreen.get_rect().centerx
 pauseRect.centery = gameScreen.get_rect().centery
 
-speakText = basicfont.render('Speak Now', True, (0, 0, 0), None)
+speakNow = False
+
+speakText = basicfont.render('', True, (0, 0, 0), None)
 speakRect = speakText.get_rect()
 speakRect.centerx = gameScreen.get_rect().centerx 
-speakRect.centery = gameScreen.get_rect().centery/4 * 3
+speakRect.centery = 384
 
 s = speech.Speech(lvl)
 
@@ -168,21 +171,7 @@ while True:
 	if not isStopped:
 		currEnemySpeed = 3
 		cloudSpeed = 5
-	
-	if(currEnemyX == enemyStopperX):
-		currEnemySpeed = 0
-		cloudSpeed = 0
-		isStopped = True;
-		gameScreen.blit(speakText, speakRect)
-		#call NLP
-		if s.record_and_validate(currWord):
-			correctList.append(currWord)		
-			isStopped = False
-			currEnemyX -= 3
-		else:
-			wrongList.append(currWord)
-			isStopped = False
-			currEnemyX -= 3	
+		gunmaAnim.animate()
 			
 	if cloud1X <= -50:								#Move cloud1 R -> L
 		cloud1X = screenboundx
@@ -201,7 +190,6 @@ while True:
 		gunmaAnim.draw(gameScreen)
 		gameScreen.blit(currEnemy, (currEnemyX, currEnemyY))
 		gameScreen.blit(wordText, wordRect)
-		gameScreen.blit(gunmachan, (gunmachanX, gunmachanY))
 		gameScreen.blit(cloud, (cloud1X, cloud1Y))
 		gameScreen.blit(cloud, (cloud2X, cloud2Y))
 		gameScreen.blit(cloud, (cloud3X, cloud3Y))
@@ -235,6 +223,32 @@ while True:
 		corrRect.centery = gameScreen.get_rect().centery + 100
 		gameScreen.blit(corrText, corrRect)
 	
+	if currEnemyX == enemyStopperX + 3:
+		speakText = basicfont.render('Speak Now', True, (0, 0, 0), None)
+		gameScreen.blit(speakText, speakRect)
+	else:
+		speakText = basicfont.render('', True, (0, 0, 0), None)
+		gameScreen.blit(speakText, speakRect)
+
+	if(currEnemyX == enemyStopperX):
+		currEnemySpeed = 0
+		cloudSpeed = 0
+		isStopped = True
+		speakNow = True
+		#call NLP
+		if s.record_and_validate(currWord):
+			correctList.append(currWord)		
+			isStopped = False
+			currEnemyX -= 3
+		else:
+			wrongList.append(currWord)
+			isStopped = False
+			currEnemyX -= 3	
+		speakText = basicfont.render('', True, (0, 0, 0), None)	
+		gameScreen.blit(speakText, speakRect)
+	else:
+		speakNow = False
+
 	if not isPaused:														
 		currEnemyX -= currEnemySpeed
 		cloud1X -= cloudSpeed
