@@ -7,29 +7,28 @@ pygame.init()
 ## Game settings
 gameScreen = pygame.display.set_mode((512,512), 0, 32)
 pygame.display.set_caption('Gunma Pronunciation Game')
-#FPS = 1
 
-"""class spritesheet:
-	def _init_(self, filename, cols, rows):
-	self.sheet = pygame.image.load(filename)
-	self.cols = cols
-	self.rows = rows
-	self.totalCellCount = cols * rows
-	self.rect = self.sheet.get_rect()
-	w = self.cellWidth = self.rect.width/cols
-	h = self.cellHeight = self.rect.height/rows
-	hw,hh = self.cellCenter = (w/2, h/2)
-	self.cells = list(index % cols * w , index/cols * h ) """
-	
-"""
-##Textures and Images
-ss = spritesheet.spritesheet('testgunmaspritesheet.png')
-#image = ss.image_at((0, 0, 87, 94))
-gunmaImages = []
-for i in range(1, 8):
-	gunmaImages[i-1] = ss.image_at((0, 0, 87 * i, 94))
-"""
-	
+##Gunma-Chan Spritesheet anim
+class GunmaSprite():
+	x = 30
+	y = 214
+	imgIndex = 0
+	sheet = pygame.image.load("testgunmaspritesheet.png").convert_alpha()
+	rect = pygame.Rect((imgIndex,0),(87,94))
+	ima = pygame.Surface(rect.size).convert()
+	ima.blit(sheet,(0,0),rect)
+
+	def draw(self,scrn):
+		scrn.blit(self.sheet, (self.x, self.y), self.rect)
+
+	def animate(self):
+		self.imgIndex += 87
+		if(self.imgIndex >= 696):
+			self.imgIndex = 0
+		self.rect = pygame.Rect((self.imgIndex,0),(87,94))
+		self.ima.blit(self.sheet,(0,0),self.rect)
+
+
 ##Information should be passed from interface
 words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine']
 wordCategory = 'Numbers'
@@ -125,7 +124,11 @@ pauseRect = pauseText.get_rect()
 pauseRect.centerx = gameScreen.get_rect().centerx
 pauseRect.centery = gameScreen.get_rect().centery
 
-# Move this up here so it doesn't need to rebuild the neural net each time
+speakText = basicfont.render('Speak Now', True, (0, 0, 0), None)
+speakRect = speakText.get_rect()
+speakRect.centerx = gameScreen.get_rect().centerx 
+speakRect.centery = gameScreen.get_rect().centery/4 * 3
+
 s = speech.Speech(lvl)
 
 while True:
@@ -146,6 +149,7 @@ while True:
 		if event.type == pygame.QUIT:
 		   pygame.quit()
 		   quit()
+	
 	gameScreen.blit(sky, (0,0))
 	
 	screenboundx, screenboundy = gameScreen.get_size()
@@ -169,7 +173,8 @@ while True:
 		currEnemySpeed = 0
 		cloudSpeed = 0
 		isStopped = True;
-		#call chris software
+		gameScreen.blit(speakText, speakRect)
+		#call NLP
 		if s.record_and_validate(currWord):
 			correctList.append(currWord)		
 			isStopped = False
@@ -193,7 +198,7 @@ while True:
 	
 	if not len(words) == 0:
 		gameScreen.blit(ground, (groundX, groundY))
-		#gameScreen.blit(enemyStopper, (enemyStopperX, enemyStopperY))
+		gunmaAnim.draw(gameScreen)
 		gameScreen.blit(currEnemy, (currEnemyX, currEnemyY))
 		gameScreen.blit(wordText, wordRect)
 		gameScreen.blit(gunmachan, (gunmachanX, gunmachanY))
@@ -202,8 +207,8 @@ while True:
 		gameScreen.blit(cloud, (cloud3X, cloud3Y))
 		gameScreen.blit(text, textrect)
 		gameScreen.blit(text0, textrect0)
-		gameScreen.blit(correctText, correctTextRect)
-		gameScreen.blit(incorrectText, incorrectTextRect)
+		#gameScreen.blit(correctText, correctTextRect)
+		#gameScreen.blit(incorrectText, incorrectTextRect)
 		#debugger = "Debug: " + str(currEnemyX) + "    " + str(enemyStopperX) + "   " + str(currEnemySpeed)
 		#debugText = basicfont4.render(debugger, True, (0, 0, 0), None)
 		#debugRect = debugText.get_rect()
