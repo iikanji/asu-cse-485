@@ -31,13 +31,6 @@ class Sprite():
 		self.ima = pygame.Surface((self.rect).size).convert()
 		self.ima.blit(self.sheet,(0,0),self.rect)
 	
-	
-	#sheet = pygame.image.load(self.spritesheet).convert_alpha()
-	#rect = pygame.Rect((imageNum,0),(self.spriteWidth,self.spriteHeight))
-	
-	#ima = pygame.Surface(rect.size).convert()
-	#ima.blit(sheet,(0,0),rect)
-
 	def animate(self):
 		self.imageNum += self.spriteWidth											
 		if(self.imageNum >= self.imageWidth):  										
@@ -54,19 +47,14 @@ words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
 wordCategory = 'Numbers'
 lvl = 0
 
-numEnemies = len(words)		#need to determine based on the words array length
-enemyCounter = numEnemies + 1
+numEnemies = len(words)	
+enemyCounter = numEnemies - 1
+currWord = words[0]
+words.pop(0)
 
-
+enemy1Texture = 'enemy1.png'
 enemy2Texture = 'enemy2.png'
 enemy3Texture = 'enemy3.png'
-groundTexture = 'BrownGround.png'
-enemy1Texture = 'enemy1.png'
-skyTexture = 'sky.png'
-cloudTexture = 'BigCloud.png'
-sky = pygame.image.load(skyTexture)
-cloud = pygame.image.load(cloudTexture)
-ground = pygame.image.load(groundTexture)
 enemy1 = pygame.image.load(enemy1Texture)
 enemy2 = pygame.image.load(enemy2Texture)
 enemy3 = pygame.image.load(enemy3Texture)
@@ -75,24 +63,14 @@ basicfont = pygame.font.SysFont(None, 40)
 guiText0 = 'Category: ' + wordCategory
 text0 = basicfont.render(guiText0, True, (0, 0, 0), None)
 textrect0 = text0.get_rect()
-textrect0.centerx = 130 	
+textrect0.centerx = 135 	
 textrect0.centery = 15 		
 
 guiText = 'Level: ' + str(lvl)
 text = basicfont.render(guiText, True, (0, 0, 0), None)
 textrect = text.get_rect()
-textrect.centerx = 60 		#gameScreen.get_rect().centerx
-textrect.centery = 45 		#gameScreen.get_rect().centery
-
-correctText = basicfont.render(' Correct - C key', True, (0, 255, 0), None)		
-correctTextRect = correctText.get_rect()
-correctTextRect.centerx = 100
-correctTextRect.centery = 450
-
-incorrectText = basicfont.render('Incorrect - I key', True, (255, 0, 0), None)		
-incorrectTextRect = incorrectText.get_rect()
-incorrectTextRect.centerx = 100
-incorrectTextRect.centery = 480
+textrect.centerx = 60 		
+textrect.centery = 45 		
 
 clock = pygame.time.Clock()
 pygame.mouse.set_visible(False)
@@ -110,34 +88,21 @@ currEnemy = random.choice(enemyArray)
 #gunmaAnim = GunmaSprite()
 gunmaAnim = Sprite(75, 325, "testgunmaspritesheet.png", 8)   #x,y (where you want it), image file name, number of sprites in sheet
 
-
-groundX = 0 
-groundY = 300
-cloud1X = 25
-cloud1Y = 25
-cloud2X = 150
-cloud2Y = 50
-cloud3X = 300
-cloud3Y = 150
 currEnemyX = 800
 currEnemyY = 400
 enemyStopperX = 250
 enemyStopperY = 400
 
-isPaused = False
+
 isStopped = False
 
-if not isPaused:
-	currEnemySpeed = 5
-	cloudSpeed = 5
+currEnemySpeed = 5
 
-currWord = words[0]
-del words[0]
-basicfont4 = pygame.font.SysFont(None, 48)
+basicfont4 = pygame.font.SysFont(None, 52)
 wordText = basicfont4.render(currWord, True, (0, 0, 0), None)
 wordRect = wordText.get_rect()
-wordRect.centerx = gameScreen.get_rect().centerx #currEnemyX + 15
-wordRect.centery = gameScreen.get_rect().centery #currEnemyY - 25
+wordRect.centerx = gameScreen.get_rect().centerx 
+wordRect.centery = gameScreen.get_rect().centery 
 
 pauseText = basicfont.render('Temp Pause Screen', True, (0, 0, 0), None)
 pauseRect = pauseText.get_rect()
@@ -146,22 +111,24 @@ pauseRect.centery = gameScreen.get_rect().centery
 
 speakText = basicfont.render('', True, (0, 0, 0), None)
 speakRect = speakText.get_rect()
-speakRect.centerx = gameScreen.get_rect().centerx 
-speakRect.centery = 384
+speakRect.centerx = 550 #gameScreen.get_rect().centerx 
+speakRect.centery = 120
 
 #s = speech.Speech(lvl)
 
-
+#Paralax Background Initialization
 yBackgroundStart = secondBackground.get_width()
 yBackgroundCurr = yBackgroundStart
 yBackgroundOne = 0
-# = 0
 
-while True:
+endGame = False
+runGame = True
+
+while runGame:
 	for event in pygame.event.get():
 		if event.type == pygame.KEYDOWN:
-			if event.key == pygame.K_p:
-				isPaused = not isPaused
+			#if event.key == pygame.K_p:
+				#isPaused = not isPaused
 			if event.key == pygame.K_c:
 				if isStopped:
 					correctList.append(currWord)
@@ -178,13 +145,10 @@ while True:
 	
 	gameScreen.blit(backgroundImage, (yBackgroundOne, 0))
 	gameScreen.blit(backgroundImage, (yBackgroundCurr, 0))
-	#gameScreen.blit(sky, (0,0))
-	
-	
 	
 	screenboundx, screenboundy = gameScreen.get_size()
 
-	if currEnemyX <= -25 and len(words) + 1 > 0:		#Move enemy R -> L
+	if currEnemyX <= -25 and enemyCounter > 0:		#Move enemy R -> L
 		currEnemy = random.choice(enemyArray)
 		currEnemyX = screenboundx
 		currEnemyY = 400
@@ -192,75 +156,11 @@ while True:
 		wordText = basicfont4.render(currWord, True, (0, 0, 0), None)
 		wordRect = wordText.get_rect()
 		wordRect = wordText.get_rect()
-		wordRect.centerx = gameScreen.get_rect().centerx#currEnemyX + 15
-		wordRect.centery = gameScreen.get_rect().centery#currEnemyY - 25	
+		wordRect.centerx = gameScreen.get_rect().centerx
+		wordRect.centery = gameScreen.get_rect().centery
+		enemyCounter -= 1
 
-	if not isStopped:
-		currEnemySpeed = 5
-		cloudSpeed = 5
-		gunmaAnim.animate()
-		if yBackgroundOne == -800:
-			yBackgroundOne = yBackgroundStart
-		else:
-			yBackgroundOne -= 2
-	
-		if(yBackgroundCurr > -800): 
-			yBackgroundCurr -= 2
-		else:
-			yBackgroundCurr = yBackgroundStart
 			
-	if cloud1X <= -50:								#Move cloud1 R -> L
-		cloud1X = screenboundx
-		cloud1Y = 25 + random.randrange(100)
-	
-	if cloud2X <= -50:								#Move cloud2 R -> L
-		cloud2X = screenboundx
-		cloud2Y = 50 + random.randrange(150)
-	
-	if cloud3X <= -50:								#Move cloud2 R -> L
-		cloud3X = screenboundx
-		cloud3Y = 10 + random.randrange(50)
-	
-	if not len(words) == 0:
-		#gameScreen.blit(ground, (groundX, groundY))
-		gunmaAnim.draw(gameScreen)
-		gameScreen.blit(currEnemy, (currEnemyX, currEnemyY))
-		gameScreen.blit(wordText, wordRect)
-		#gameScreen.blit(cloud, (cloud1X, cloud1Y))
-		#gameScreen.blit(cloud, (cloud2X, cloud2Y))
-		#gameScreen.blit(cloud, (cloud3X, cloud3Y))
-		gameScreen.blit(text, textrect)
-		gameScreen.blit(text0, textrect0)
-		#gameScreen.blit(correctText, correctTextRect)
-		#gameScreen.blit(incorrectText, incorrectTextRect)
-	
-	else:											#End game info
-		stringEndText = 'Temp End Screen'
-		endText = basicfont.render(stringEndText, True, (0, 0, 0), None)
-		endRect = endText.get_rect()
-		endRect.centerx = gameScreen.get_rect().centerx 
-		endRect.centery = gameScreen.get_rect().centery - 100
-		gameScreen.blit(endText, endRect)
-		incList = 'Incorrect List: ' + ' , '.join(wrongList)
-		incText = basicfont4.render(incList, True, (0, 0, 0), None)
-		incRect = incText.get_rect()
-		incRect.centerx = gameScreen.get_rect().centerx
-		incRect.centery = gameScreen.get_rect().centery
-		gameScreen.blit(incText, incRect)
-		corrList = 'Correct List: ' + ' , '.join(correctList)
-		corrText = basicfont4.render(corrList, True, (0, 0, 0), None)
-		corrRect = corrText.get_rect()
-		corrRect.centerx = gameScreen.get_rect().centerx
-		corrRect.centery = gameScreen.get_rect().centery + 100
-		gameScreen.blit(corrText, corrRect)
-	
-	if currEnemyX == enemyStopperX + 5:
-		speakText = basicfont.render('Speak Now', True, (0, 0, 0), None)
-		gameScreen.blit(speakText, speakRect)
-	else:
-		speakText = basicfont.render('', True, (0, 0, 0), None)
-		gameScreen.blit(speakText, speakRect)
-
 	if(currEnemyX == enemyStopperX):
 		currEnemySpeed = 0
 		cloudSpeed = 0
@@ -276,16 +176,75 @@ while True:
 			isStopped = False
 			currEnemyX -= 3	
 		"""
+	
+	if enemyCounter > 0:												   #Run game		
+		gameScreen.blit(wordText, wordRect)
+		gameScreen.blit(text, textrect)
+		gameScreen.blit(text0, textrect0)
+		gunmaAnim.draw(gameScreen)
+		gameScreen.blit(currEnemy, (currEnemyX, currEnemyY))
+	else:																#End game info
+		endGame = True
+		isStopped = True
+		endText = basicfont4.render('Game Complete', True, (0, 0, 0), None)
+		endRect = endText.get_rect()
+		endRect.centerx = gameScreen.get_rect().centerx 
+		endRect.centery = gameScreen.get_rect().centery - 125
+		gameScreen.blit(endText, endRect)
+		incList = 'Incorrect List: ' + ' , '.join(wrongList)
+		incText = basicfont.render(incList, True, (255, 255, 255), None)
+		incRect = incText.get_rect()
+		incRect.centerx = gameScreen.get_rect().centerx
+		incRect.centery = gameScreen.get_rect().centery - 25
+		gameScreen.blit(incText, incRect)
+		corrList = 'Correct List: ' + ' , '.join(correctList)
+		corrText = basicfont.render(corrList, True, (255, 255, 255), None)
+		corrRect = corrText.get_rect()
+		corrRect.centerx = gameScreen.get_rect().centerx
+		corrRect.centery = gameScreen.get_rect().centery + 75
+		gameScreen.blit(corrText, corrRect)
+		
+	if not isStopped:									#If the enemy is not stopped 
+		currEnemySpeed = 5
+		gunmaAnim.animate()
+		if yBackgroundOne == -800:
+			yBackgroundOne = yBackgroundStart
+		else:
+			yBackgroundOne -= 2
+	
+		if(yBackgroundCurr > -800): 
+			yBackgroundCurr -= 2
+		else:
+			yBackgroundCurr = yBackgroundStart
+			
+		currEnemyX -= currEnemySpeed
+		speakText = basicfont.render('', True, (0, 0, 0), None)
+		gameScreen.blit(speakText, speakRect)
+	else:												# Enemy is stopped 
+		if not endGame:
+			speakText = basicfont.render('Speak Now', True, (0, 0, 0), None)
+			gameScreen.blit(speakText, speakRect)
+	
+	"""
+	if currEnemyX == enemyStopperX + 5:
+		speakText = basicfont.render('Speak Now', True, (0, 0, 0), None)
+		gameScreen.blit(speakText, speakRect)
+	elif currEnemyX < enemyStopperX:
+		speakText = basicfont.render('', True, (0, 0, 0), None)
+		gameScreen.blit(speakText, speakRect)
+	"""
+	
+
+		
+	"""
 	if not isPaused:														
 		currEnemyX -= currEnemySpeed
-		cloud1X -= cloudSpeed
-		cloud2X -= cloudSpeed
-		cloud3X -= cloudSpeed
-		wordRect.centerx = gameScreen.get_rect().centerx #currEnemyX + 15
-		wordRect.centery = gameScreen.get_rect().centery #currEnemyY - 25	
+		wordRect.centerx = gameScreen.get_rect().centerx 
+		wordRect.centery = gameScreen.get_rect().centery 
 	else:
 		gameScreen.blit(pauseText, pauseRect)	
-		
+	"""
+	
 	clock.tick(20)
 	pygame.display.update()
 
